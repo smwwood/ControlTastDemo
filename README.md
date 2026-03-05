@@ -102,14 +102,21 @@ python train_minimal.py --policy pd --episodes 5
 python train_minimal.py --policy torch --episodes 5
 ```
 
-### Placeholder modes
+### PPO training mode
 
 ```bash
-python train_minimal.py --policy ppo
+python train_minimal.py --policy ppo --episodes 20
+```
+
+This runs a lightweight on-policy PPO loop in `train_minimal.py` and updates the policy after each episode.
+
+### SAC mode (placeholder)
+
+```bash
 python train_minimal.py --policy sac
 ```
 
-These currently print a placeholder message; integrate your PPO/SAC trainer in `make_policy(...)`.
+`--policy sac` is still a placeholder and currently prints a `NotImplementedError` message.
 
 ---
 
