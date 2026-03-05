@@ -7,8 +7,6 @@ tracking task:
 
 Where ``M`` is controller output (action-integrated), ``D`` is an AR(1)
 disturbance, ``C`` is cursor, and ``T`` is target.
-
-Reward is computed per frame as ``-pixel_reward_scale * abs(C - T)``.
 """
 
 from __future__ import annotations
@@ -37,7 +35,7 @@ class EnvConfig:
     sigma: float = 1.8
     action_scale: float = 1.0
     action_clip: float = 50.0
-    pixel_reward_scale: float = 0.001
+    lambda_action: float = 0.0005
     seed: int = 7
 
 
@@ -155,9 +153,7 @@ class TrackingEnv:
         dD = self.D - prev_d
         e = self.C - self.T
 
-        # Per-frame reward: -0.001 per pixel separation between cursor and target.
-        # Perfect alignment (E=0) gives reward 0.
-        reward = -self.cfg.pixel_reward_scale * abs(e)
+        reward = -(e**2) - self.cfg.lambda_action * (dM**2)
 
         self.step_count += 1
         terminated = self.step_count >= self.max_steps

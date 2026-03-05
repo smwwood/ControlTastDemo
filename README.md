@@ -1,18 +1,18 @@
 # ControlTastDemo
 
-A compensatory tracking task project refactored into modular components for demos and RL experiments.
+A small compensatory tracking task project, refactored from a single-file prototype into modular components suitable for demos and RL experiments.
 
 ## Project structure
 
 - `tracking_env.py`: core gymnasium-style environment (no pygame dependency).
 - `tracking_demo.py`: pygame UI runner with human and PD model modes.
-- `policies.py`: `PDPolicy`, `TorchPolicyWrapper`, and trainable `PPOPolicy`.
-- `train_minimal.py`: minimal RL scaffold for random / PD / torch / PPO rollouts.
+- `policies.py`: control policies (`PDPolicy`) and a PyTorch wrapper (`TorchPolicyWrapper`).
+- `train_minimal.py`: minimal RL scaffold for random / PD / torch policy rollouts.
 - `tracking_task.py`: backward-compatible entrypoint that delegates to the demo.
 
 ---
 
-## 1) Setup a virtual environment
+## 1) Setup: create and activate a virtual environment
 
 ### Prerequisites
 - Python 3.10+
@@ -44,100 +44,76 @@ python -m py_compile tracking_env.py policies.py tracking_demo.py train_minimal.
 
 ---
 
-## 2) Run the demo
+## 2) Run the tracking demo
 
 All demo runs are 10 seconds at 60Hz by default.
 
-### Human mode
+### A) Human mode
+Use your mouse movement to control the controller output (`dM`).
 
 ```bash
 python tracking_demo.py --mode human
 ```
 
-- Move mouse left/right to control the lower cursor line.
+Notes:
+- Move mouse left/right to control the cursor.
 - Press `ESC` to quit.
-- Click **New Run** to reset the episode.
+- Click **New Run** to reset and replay.
+- At episode end, metrics are printed and a matplotlib plot is shown.
 
-### PD controller mode
+### B) PD controller mode (model mode)
+Use the built-in proportional-derivative control policy.
 
 ```bash
 python tracking_demo.py --mode model
 ```
 
-This uses the built-in `PDPolicy` to control the cursor.
+This runs the same environment but uses `PDPolicy` for actions.
 
-### Legacy command (backward compatible)
+### Backward-compatible legacy command
 
 ```bash
 python tracking_task.py
 ```
 
+(Equivalent to running the demo in the default control mode.)
+
 ---
 
-## 3) Train / evaluate policies
+## 3) Run RL/minimal training scaffold
 
-### Random policy
+`train_minimal.py` provides a lightweight rollout loop for baseline comparisons and future RL integration.
+
+### Random policy baseline
 
 ```bash
-python train_minimal.py --policy random --episodes 20
+python train_minimal.py --policy random --episodes 5
 ```
 
 ### PD baseline
 
 ```bash
-python train_minimal.py --policy pd --episodes 20
+python train_minimal.py --policy pd --episodes 5
 ```
 
-### Torch wrapper baseline (untrained network)
+### Torch policy wrapper baseline
 
 ```bash
-python train_minimal.py --policy torch --episodes 20
+python train_minimal.py --policy torch --episodes 5
 ```
 
-### PPO training
+### Placeholder modes
 
 ```bash
-python train_minimal.py --policy ppo --episodes 200
-```
-
-This trains a lightweight PPO agent (actor + critic) directly in PyTorch. Per episode, the script logs:
-- `reward`
-- `rms_error`
-- `stability`
-- PPO losses (`ppo_loss`, `value_loss`)
-
-### SAC placeholder
-
-```bash
+python train_minimal.py --policy ppo
 python train_minimal.py --policy sac
 ```
 
-SAC is still a stub and prints an integration message.
+These currently print a placeholder message; integrate your PPO/SAC trainer in `make_policy(...)`.
 
 ---
 
-## Reward function used for RL
-
-Reward is computed **every frame** as:
-
-```text
-reward_t = -0.001 * |C_t - T_t|
-```
-
-Where:
-- `C_t` is cursor x-position,
-- `T_t` is target x-position,
-- `|C_t - T_t|` is pixel distance between the two lines.
-
-So:
-- Perfect alignment (`C_t == T_t`) gives reward `0.0`.
-- Larger separation gives more negative reward.
-
-This per-frame reward is what PPO trains against.
-
----
-
-## Environment metrics
+## Metrics logged
 
 At episode end, the environment reports:
 - `rms_error`: root mean square of tracking error (`E = C - T`)
@@ -145,3 +121,8 @@ At episode end, the environment reports:
 - `corr_dC_dM`: correlation between delta cursor and delta controller output
 - `corr_dM_dD`: correlation between delta controller output and delta disturbance
 - `corr_dC_dD`: correlation between delta cursor and delta disturbance
+
+Training logs include:
+- `episode_reward`
+- `rms_error`
+- `stability`
